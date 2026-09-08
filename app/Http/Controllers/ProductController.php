@@ -127,6 +127,7 @@ class ProductController extends Controller
             'customs_cost_per_unit' => 'nullable|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
             'min_selling_price' => 'nullable|numeric|min:0',
+            'stock_quantity' => 'required|numeric|min:0',
             'min_stock_alert' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -136,6 +137,9 @@ class ProductController extends Controller
         $purchasePrice = (float)$validated['purchase_price'];
         $customsCost = (float)($validated['customs_cost_per_unit'] ?? 0);
         $actualCost = $purchasePrice + $customsCost;
+
+        $qtyBefore = (float)$product->stock_quantity;
+        $qtyAfter = (float)$validated['stock_quantity'];
 
         if ($request->hasFile('image')) {
             if ($product->image_path && Storage::disk('public')->exists($product->image_path)) {
@@ -155,12 +159,26 @@ class ProductController extends Controller
             'actual_cost' => $actualCost,
             'selling_price' => (float)$validated['selling_price'],
             'min_selling_price' => $validated['min_selling_price'] ? (float)$validated['min_selling_price'] : null,
+            'stock_quantity' => $qtyAfter,
             'min_stock_alert' => (int)($validated['min_stock_alert'] ?? 5),
             'description' => $validated['description'] ?? null,
             'is_active' => $request->has('is_active') ? (bool)$request->is_active : true,
         ]);
 
-        return redirect()->route('products.index')->with('success', 'تم تعديل بيانات المنتج والتكلفة بنجاح.');
+        if ($qtyAfter != $qtyBefore) {
+            InventoryLog::create([
+                'product_id' => $product->id,
+                'type' => $qtyAfter > $qtyBefore ? 'adjustment' : 'damage',
+                'quantity_change' => $qtyAfter - $qtyBefore,
+                'quantity_before' => $qtyBefore,
+                'quantity_after' => $qtyAfter,
+                'reference_type' => 'تعديل مباشر من صفحة المنتج',
+                'notes' => 'تحديث رصيد المستودع من صفحة التعديل',
+                'user_id' => Auth::id(),
+            ]);
+        }
+
+        return redirect()->route('products.index')->with('success', 'تم تعديل بيانات المنتج ورصيد المخزون بنجاح.');
     }
 
     public function adjustStock(Request $request, Product $product)

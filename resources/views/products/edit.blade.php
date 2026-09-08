@@ -91,17 +91,24 @@
             </div>
 
             <hr class="my-4">
+            <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-boxes-stacked ms-1"></i> رصيد المستودع والمخزون الحالي</h6>
             <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-primary">رصيد المستودع الحالي المتوفر <span class="text-danger">*</span></label>
+                    <input type="number" step="0.001" min="0" name="stock_quantity" class="form-control text-primary fw-bold fs-5" value="{{ old('stock_quantity', (float)$product->stock_quantity) }}" required>
+                    <div class="form-text text-muted small">عدّل الرقم لتغيير الرصيد المتوفر في المخزن مباشرة، أو زيادته عند التوريد الجديد.</div>
+                </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold small">حد التنبيه عند نقص المخزون</label>
                     <input type="number" step="1" min="0" name="min_stock_alert" class="form-control" value="{{ old('min_stock_alert', $product->min_stock_alert) }}">
                 </div>
-                <div class="col-md-6 d-flex align-items-center pt-4">
+                <div class="col-md-12 mt-3">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="is_active" id="isActiveSwitch" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
                         <label class="form-check-label fw-bold small" for="isActiveSwitch">المنتج متاح ونشط للبيع</label>
                     </div>
                 </div>
+            </div>
                 <div class="col-md-12">
                     <label class="form-label fw-bold small">صورة المنتج</label>
                     @if($product->image_path)
