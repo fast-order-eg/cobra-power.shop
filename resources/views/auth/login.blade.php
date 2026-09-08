@@ -94,7 +94,7 @@
                 <label class="form-label fw-bold small text-secondary">البريد الإلكتروني</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fa-solid fa-envelope text-muted"></i></span>
-                    <input type="email" name="email" class="form-control border-start-0 rounded-end-3" value="{{ old('email', 'admin@cobra-power.shop') }}" required autofocus placeholder="admin@cobra-power.shop">
+                    <input type="email" name="email" class="form-control border-start-0 rounded-end-3" value="{{ old('email') }}" required autofocus placeholder="name@example.com">
                 </div>
             </div>
 
@@ -102,16 +102,15 @@
                 <label class="form-label fw-bold small text-secondary">كلمة المرور</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fa-solid fa-lock text-muted"></i></span>
-                    <input type="password" name="password" class="form-control border-start-0 rounded-end-3" value="12345678" required placeholder="••••••••">
+                    <input type="password" name="password" class="form-control border-start-0 rounded-end-3" required placeholder="••••••••">
                 </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="remember" id="remember" checked>
+                    <input class="form-check-input" type="checkbox" name="remember" id="remember">
                     <label class="form-check-label small text-muted" for="remember">تذكرني</label>
                 </div>
-                <span class="badge bg-light text-primary border">دخول المدير الافتراضي</span>
             </div>
 
             <button type="submit" class="btn btn-login">
