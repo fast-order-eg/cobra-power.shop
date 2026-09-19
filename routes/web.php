@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{invoice}/print-thermal', [InvoiceController::class, 'printThermal'])->name('invoices.print-thermal');
     Route::get('/invoices/{invoice}/print-a4', [InvoiceController::class, 'printA4'])->name('invoices.print-a4');
     Route::post('/invoices/{invoice}/sync-tax', [InvoiceController::class, 'syncTax'])->name('invoices.sync-tax');
-    Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 
     // Customers
     Route::resource('customers', \App\Http\Controllers\CustomerController::class)->only(['index', 'store', 'update', 'destroy']);
