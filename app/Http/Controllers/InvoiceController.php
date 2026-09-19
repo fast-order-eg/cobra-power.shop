@@ -230,4 +230,48 @@ class InvoiceController extends Controller
         }
         return back()->with('error', $result['message']);
     }
+
+    public function destroy(Invoice $invoice)
+    {
+        DB::transaction(function () use ($invoice) {
+            $invoice->load(['items']);
+
+            // 1. Restore stock quantity for all items
+            foreach ($invoice->items as $item) {
+                if ($item->product_id) {
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $qtyBefore = (float)$product->stock_quantity;
+                        $qtyAfter = $qtyBefore + (float)$item->quantity;
+                        $product->update(['stock_quantity' => $qtyAfter]);
+
+                        InventoryLog::create([
+                            'product_id' => $product->id,
+                            'type' => 'purchase',
+                            'quantity_change' => (float)$item->quantity,
+                            'quantity_before' => $qtyBefore,
+                            'quantity_after' => $qtyAfter,
+                            'reference_type' => 'إلغاء/حذف فاتورة مبيعات',
+                            'notes' => "إعادة الكمية للمستودع بسبب حذف الفاتورة رقم {$invoice->invoice_number}",
+                            'user_id' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            // 2. Adjust customer balance if remaining amount > 0
+            if ($invoice->customer_id && $invoice->remaining_amount > 0) {
+                $customer = Customer::find($invoice->customer_id);
+                if ($customer) {
+                    $customer->decrement('current_balance', (float)$invoice->remaining_amount);
+                }
+            }
+
+            // 3. Delete items and invoice
+            $invoice->items()->delete();
+            $invoice->delete();
+        });
+
+        return redirect()->route('invoices.index')->with('success', 'تم حذف الفاتورة وإعادة الكميات المباعة للمستودع وتعديل حساب العميل بنجاح.');
+    }
 }

@@ -91,7 +91,7 @@
                                 <div class="list-group list-group-flush small border rounded-3 overflow-hidden">
                                     @foreach($employee->advances->take(2) as $adv)
                                         <div class="list-group-item d-flex justify-content-between align-items-center py-1 px-2">
-                                            <span>{{ $adv->advance_date ? $adv->advance_date->format('m/d') : '-' }} - {{ $adv->notes }}</span>
+                                            <span>{{ $adv->advance_date ? $adv->advance_date->format('m/d') : '-' }} {{ $adv->target_month ? '(عن شهر ' . $adv->target_month . ')' : '' }} - {{ $adv->notes }}</span>
                                             <span class="fw-bold {{ $adv->status === 'pending' ? 'text-danger' : 'text-muted' }}">
                                                 {{ number_format($adv->amount, 3) }} د.أ
                                                 @if($adv->status === 'deducted')
@@ -145,9 +145,15 @@
                                     <label class="form-label fw-bold small">مبلغ السلفة (د.أ) <span class="text-danger">*</span></label>
                                     <input type="number" step="0.5" min="1" name="amount" class="form-control fw-bold text-danger fs-5" placeholder="مثال: 50.000" required>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small">تاريخ الصرف <span class="text-danger">*</span></label>
-                                    <input type="date" name="advance_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">تاريخ الصرف <span class="text-danger">*</span></label>
+                                        <input type="date" name="advance_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">عن راتب شهر / سنة <span class="text-danger">*</span></label>
+                                        <input type="month" name="target_month" class="form-control" value="{{ date('Y-m') }}" required>
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold small">السبب / ملاحظات</label>
@@ -185,9 +191,15 @@
                                         <strong class="text-primary">{{ number_format($employee->basic_salary, 3) }} د.أ</strong>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2 text-danger">
-                                        <span>السلف المعلقة (تُخصم تلقائياً):</span>
-                                        <strong>-{{ number_format($employee->pending_advances_total, 3) }} د.أ</strong>
+                                        <span>إجمالي السلف المعلقة:</span>
+                                        <strong>{{ number_format($employee->pending_advances_total, 3) }} د.أ</strong>
                                     </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-danger">خصم السلفيات من هذا الراتب (د.أ) <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.5" min="0" name="advances_deducted" class="form-control text-danger fw-bold fs-5" value="{{ (float)$employee->pending_advances_total }}" required>
+                                    <div class="form-text text-muted small">يمكنك خصم كامل السلف القائمة أو خصم جزء منها وتأجيل الباقي للأشهر القادمة.</div>
                                 </div>
 
                                 <div class="row g-2 mb-3">

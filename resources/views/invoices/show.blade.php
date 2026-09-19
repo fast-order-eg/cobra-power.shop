@@ -25,6 +25,13 @@
             <a href="{{ route('invoices.print-a4', $invoice) }}" target="_blank" class="btn btn-primary rounded-3 px-3 shadow-sm">
                 <i class="fa-solid fa-file-pdf ms-1"></i> طباعة فاتورة A4
             </a>
+            <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من رغبتك في حذف الفاتورة رقم {{ $invoice->invoice_number }}؟\nسيتم إلغاء الفاتورة وإعادة كميات البضاعة للمستودع وتعديل رصيد العميل تلقائياً.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger rounded-3" title="حذف الفاتورة وإعادة الكميات للمستودع">
+                    <i class="fa-solid fa-trash ms-1"></i> حذف الفاتورة
+                </button>
+            </form>
             <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary rounded-3">
                 <i class="fa-solid fa-arrow-right ms-1"></i> رجوع
             </a>

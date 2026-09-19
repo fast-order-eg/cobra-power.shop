@@ -104,9 +104,52 @@
             border-bottom: 1px solid #94a3b8;
         }
         @media print {
-            body { background: transparent; padding: 0; }
-            .a4-page { width: 100%; min-height: auto; box-shadow: none; padding: 10mm; }
-            .no-print { display: none; }
+            @page {
+                size: A4 portrait;
+                margin: 6mm;
+            }
+            html, body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .a4-page {
+                width: 100% !important;
+                min-height: auto !important;
+                box-shadow: none !important;
+                padding: 4mm !important;
+                color: #000000 !important;
+            }
+            p, span, td, th, h2, h4, div, strong, small {
+                color: #000000 !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                color: #000000 !important;
+                border: 1.5px solid #000000 !important;
+            }
+            td {
+                border: 1.5px solid #000000 !important;
+                color: #000000 !important;
+            }
+            .info-grid {
+                border: 1.5px solid #000000 !important;
+                background: #ffffff !important;
+            }
+            .header-box {
+                border-bottom: 2px solid #000000 !important;
+            }
+            .invoice-title-badge {
+                background: #000000 !important;
+                color: #ffffff !important;
+            }
+            .sig-line {
+                border-bottom: 1.5px solid #000000 !important;
+            }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -118,7 +161,7 @@
             <div class="header-box">
                 <div>
                     <h2 style="color: #1e3a8a; font-weight: 900; margin-bottom: 4px;">{{ $setting->company_name }}</h2>
-                    <p style="font-size: 13px; color: #64748b;">تجارة واستيراد وتوزيع الأدوات الصحية والسباكة واللوازم الإنشائية</p>
+                    <p style="font-size: 13px; color: #475569; font-weight: 600;">تجارة واستيراد وتوزيع الأدوات الصحية</p>
                     <p style="font-size: 13px; color: #475569;">{{ $setting->address }} | هاتف: {{ $setting->phone }}</p>
                     <p style="font-size: 14px; font-weight: bold; color: #1e3a8a; margin-top: 4px;">
                         الرقم الضريبي: {{ $setting->tax_number }} | السجل التجاري: {{ $setting->commercial_registry }}
@@ -209,17 +252,9 @@
 
         <!-- Footer & Signatures -->
         <div>
-            <div class="signatures">
-                <div class="sig-box">
+            <div class="signatures" style="justify-content: center;">
+                <div class="sig-box" style="width: 260px;">
                     <span>توقيع وختم المستلم</span>
-                    <div class="sig-line"></div>
-                </div>
-                <div class="sig-box">
-                    <span>أمين الصندوق / المبيعات</span>
-                    <div class="sig-line"></div>
-                </div>
-                <div class="sig-box">
-                    <span>المحاسب المسؤول</span>
                     <div class="sig-line"></div>
                 </div>
             </div>
