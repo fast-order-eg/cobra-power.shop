@@ -87,7 +87,14 @@
                         <!-- Advances List (Small Preview) -->
                         @if($employee->advances->count() > 0)
                             <div class="mb-3">
-                                <small class="fw-bold text-muted d-block mb-1">آخر السلفيات المسجلة:</small>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="fw-bold text-muted">آخر السلفيات ({{ $employee->advances->count() }} مسجلة):</small>
+                                    @if($employee->advances->count() > 2)
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none small text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#allAdvancesModal{{ $employee->id }}">
+                                            عرض الكل ({{ $employee->advances->count() }})
+                                        </button>
+                                    @endif
+                                </div>
                                 <div class="list-group list-group-flush small border rounded-3 overflow-hidden">
                                     @foreach($employee->advances->take(2) as $adv)
                                         <div class="list-group-item d-flex justify-content-between align-items-center py-1 px-2">
@@ -96,6 +103,8 @@
                                                 {{ number_format($adv->amount, 3) }} د.أ
                                                 @if($adv->status === 'deducted')
                                                     <i class="fa-solid fa-check text-success ms-1" title="تم خصمها من الراتب"></i>
+                                                @else
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle p-1 ms-1" style="font-size: 0.65rem;">معلقة</span>
                                                 @endif
                                             </span>
                                         </div>
@@ -126,6 +135,55 @@
                     </div>
                 </div>
             </div>
+
+            <!-- All Advances Modal -->
+            @if($employee->advances->count() > 0)
+                <div class="modal fade" id="allAdvancesModal{{ $employee->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered text-start">
+                        <div class="modal-content rounded-4 border-0 shadow">
+                            <div class="modal-header bg-light">
+                                <h6 class="modal-title fw-bold text-dark"><i class="fa-solid fa-list-check ms-1"></i> سجل سلف الموظف: {{ $employee->name }}</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped mb-0 small text-center align-middle">
+                                        <thead class="bg-light text-muted">
+                                            <tr>
+                                                <th>التاريخ</th>
+                                                <th>عن شهر</th>
+                                                <th>المبلغ</th>
+                                                <th>الحالة</th>
+                                                <th>البيان</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($employee->advances as $adv)
+                                                <tr>
+                                                    <td class="font-monospace text-nowrap">{{ $adv->advance_date ? $adv->advance_date->format('Y-m-d') : '-' }}</td>
+                                                    <td class="text-nowrap">{{ $adv->target_month ?? '-' }}</td>
+                                                    <td class="fw-bold {{ $adv->status === 'pending' ? 'text-danger' : 'text-dark' }}">{{ number_format($adv->amount, 3) }} د.أ</td>
+                                                    <td>
+                                                        @if($adv->status === 'pending')
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">معلقة</span>
+                                                        @else
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle">تم خصمها</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-muted text-truncate" style="max-width: 150px;">{{ $adv->notes ?? '-' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light py-2">
+                                <button type="button" class="btn btn-secondary btn-sm rounded-3" data-bs-dismiss="modal">إغلاق</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Advance Modal -->
             <div class="modal fade" id="advanceModal{{ $employee->id }}" tabindex="-1" aria-hidden="true">
@@ -188,28 +246,90 @@
                                 <div class="bg-light p-3 rounded-3 mb-3 small">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>الراتب الأساسي:</span>
-                                        <strong class="text-primary">{{ number_format($employee->basic_salary, 3) }} د.أ</strong>
+                                        <strong class="text-primary fs-6">{{ number_format($employee->basic_salary, 3) }} د.أ</strong>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2 text-danger">
+                                    <div class="d-flex justify-content-between mb-0 text-danger">
                                         <span>إجمالي السلف المعلقة:</span>
-                                        <strong>{{ number_format($employee->pending_advances_total, 3) }} د.أ</strong>
+                                        <strong class="fs-6">{{ number_format($employee->pending_advances_total, 3) }} د.أ</strong>
                                     </div>
                                 </div>
 
+                                @php
+                                    $pendingAdvancesList = $employee->advances->where('status', 'pending');
+                                @endphp
+                                @if($pendingAdvancesList->count() > 0)
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label fw-bold small text-muted mb-0">تفاصيل السلف المعلقة القائمة ({{ $pendingAdvancesList->count() }} سلفة):</label>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ number_format($employee->pending_advances_total, 3) }} د.أ</span>
+                                        </div>
+                                        <div class="border rounded-3 overflow-hidden bg-white shadow-sm" style="max-height: 120px; overflow-y: auto;">
+                                            <table class="table table-sm table-striped mb-0 small text-center align-middle">
+                                                <thead class="bg-light text-muted small">
+                                                    <tr>
+                                                        <th>التاريخ</th>
+                                                        <th>عن شهر</th>
+                                                        <th>المبلغ</th>
+                                                        <th>البيان</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($pendingAdvancesList as $adv)
+                                                        <tr>
+                                                            <td class="font-monospace text-nowrap">{{ $adv->advance_date ? $adv->advance_date->format('Y-m-d') : '-' }}</td>
+                                                            <td class="text-nowrap">{{ $adv->target_month ?? '-' }}</td>
+                                                            <td class="fw-bold text-danger text-nowrap">{{ number_format($adv->amount, 3) }} د.أ</td>
+                                                            <td class="text-muted text-truncate" style="max-width: 140px;" title="{{ $adv->notes }}">{{ $adv->notes ?? '-' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold small text-danger">خصم السلفيات من هذا الراتب (د.أ) <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.5" min="0" name="advances_deducted" class="form-control text-danger fw-bold fs-5" value="{{ (float)$employee->pending_advances_total }}" required>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label fw-bold small text-danger mb-0">خصم السلفيات من هذا الراتب (د.أ) <span class="text-danger">*</span></label>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-link p-0 text-decoration-none small text-muted" onclick="const el = document.getElementById('advances_deducted_{{ $employee->id }}'); el.value = 0; el.dispatchEvent(new Event('input'));">
+                                                عدم الخصم (0)
+                                            </button>
+                                            <span class="text-muted small">|</span>
+                                            <button type="button" class="btn btn-link p-0 text-decoration-none small text-primary fw-bold" onclick="const el = document.getElementById('advances_deducted_{{ $employee->id }}'); el.value = {{ (float)$employee->pending_advances_total }}; el.dispatchEvent(new Event('input'));">
+                                                خصم الكل ({{ number_format($employee->pending_advances_total, 3) }})
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="number" step="0.5" min="0" max="{{ (float)$employee->pending_advances_total }}" name="advances_deducted" id="advances_deducted_{{ $employee->id }}" class="form-control text-danger fw-bold fs-5 salary-calc-input" data-emp-id="{{ $employee->id }}" data-basic="{{ (float)$employee->basic_salary }}" data-pending="{{ (float)$employee->pending_advances_total }}" value="{{ (float)$employee->pending_advances_total }}" required>
                                     <div class="form-text text-muted small">يمكنك خصم كامل السلف القائمة أو خصم جزء منها وتأجيل الباقي للأشهر القادمة.</div>
                                 </div>
 
                                 <div class="row g-2 mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold small">مكافآت / بدلات إضافية (د.أ)</label>
-                                        <input type="number" step="0.5" min="0" name="bonuses" class="form-control text-success" value="0.000">
+                                        <input type="number" step="0.5" min="0" name="bonuses" id="bonuses_{{ $employee->id }}" class="form-control text-success salary-calc-input" data-emp-id="{{ $employee->id }}" data-basic="{{ (float)$employee->basic_salary }}" data-pending="{{ (float)$employee->pending_advances_total }}" value="0.000">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold small">خصومات أخرى / غياب (د.أ)</label>
-                                        <input type="number" step="0.5" min="0" name="deductions" class="form-control text-danger" value="0.000">
+                                        <input type="number" step="0.5" min="0" name="deductions" id="deductions_{{ $employee->id }}" class="form-control text-danger salary-calc-input" data-emp-id="{{ $employee->id }}" data-basic="{{ (float)$employee->basic_salary }}" data-pending="{{ (float)$employee->pending_advances_total }}" value="0.000">
+                                    </div>
+                                </div>
+
+                                <!-- Live Net Salary Calculation Card -->
+                                <div class="p-3 rounded-3 mb-3 border border-2 border-success bg-success-subtle text-center shadow-sm">
+                                    <div class="small fw-bold text-success-emphasis mb-1">
+                                        <i class="fa-solid fa-calculator ms-1"></i> صافي الراتب المستحق للصرف في اليد:
+                                    </div>
+                                    <div class="display-6 fw-bold text-success my-1" id="net_salary_display_{{ $employee->id }}">
+                                        {{ number_format(max(0, $employee->basic_salary - $employee->pending_advances_total), 3) }} د.أ
+                                    </div>
+                                    <div class="small mt-1" id="remaining_advances_display_{{ $employee->id }}">
+                                        @if($employee->pending_advances_total > 0)
+                                            <span class="text-success fw-bold"><i class="fa-solid fa-check ms-1"></i> سيتم تسوية وتصفير جميع السلف المعلقة بالكامل ✓</span>
+                                        @else
+                                            <span class="text-muted">لا توجد سلف معلقة مسجلة</span>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -291,4 +411,46 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function updateNetSalary(empId, basicSalary, totalPending) {
+        const advInput = document.getElementById('advances_deducted_' + empId);
+        const bonusInput = document.getElementById('bonuses_' + empId);
+        const dedInput = document.getElementById('deductions_' + empId);
+        const netDisplay = document.getElementById('net_salary_display_' + empId);
+        const remDisplay = document.getElementById('remaining_advances_display_' + empId);
+
+        if (!advInput || !netDisplay) return;
+
+        const adv = parseFloat(advInput.value) || 0;
+        const bonus = parseFloat(bonusInput ? bonusInput.value : 0) || 0;
+        const ded = parseFloat(dedInput ? dedInput.value : 0) || 0;
+
+        const net = Math.max(0, basicSalary + bonus - adv - ded);
+        const remAdv = Math.max(0, totalPending - adv);
+
+        netDisplay.textContent = net.toFixed(3) + ' د.أ';
+
+        if (remDisplay) {
+            if (remAdv > 0.001) {
+                remDisplay.innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-clock-rotate-left ms-1"></i> السلف المتبقية بعد الصرف: ' + remAdv.toFixed(3) + ' د.أ (ستُرحّل للشهر القادم)</span>';
+            } else {
+                remDisplay.innerHTML = '<span class="text-success fw-bold"><i class="fa-solid fa-check ms-1"></i> سيتم تسوية وتصفير جميع السلف المعلقة بالكامل ✓</span>';
+            }
+        }
+    }
+
+    document.querySelectorAll('.salary-calc-input').forEach(input => {
+        input.addEventListener('input', function () {
+            const empId = this.dataset.empId;
+            const basic = parseFloat(this.dataset.basic) || 0;
+            const totalPending = parseFloat(this.dataset.pending) || 0;
+            updateNetSalary(empId, basic, totalPending);
+        });
+    });
+});
+</script>
+@endpush
 @endsection
